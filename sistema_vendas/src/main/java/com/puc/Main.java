@@ -34,7 +34,9 @@ public class Main {
             System.out.println("3. Listar Todos os Produtos");
             System.out.println("4. Criar Novo Pedido");
             System.out.println("5. Listar Pedidos Realizados");
-            System.out.println("6. Sair");
+            System.out.println("6. Remover Produto");
+            System.out.println("7. Remover Pedido");
+            System.out.println("8. Sair");
             System.out.print("Escolha uma opção: ");
 
             int opcao = scanner.nextInt();
@@ -46,7 +48,9 @@ public class Main {
                 case 3: listarProdutos(); break;
                 case 4: criarPedido(); break;
                 case 5: listarPedidos(); break;
-                case 6:
+                case 6: removerProduto(); break;
+                case 7: removerPedido(); break;
+                case 8:
                     System.out.println("Encerrando o sistema...");
                     rodando = false;
                     break;
@@ -131,6 +135,37 @@ public class Main {
                 System.out.printf("ID: %d | %s | Preço: R$%.2f | Estoque: %d\n", 
                                   p.getId(), p.getNome(), p.getPreco(), p.getEstoque());
             }
+        } finally {
+            session.close();
+        }
+    }
+
+    private static void removerProduto() {
+        System.out.println("\n-- Removendo Produto --");
+        listarProdutos();
+        System.out.print("Digite o ID do produto que deseja excluir: ");
+        Long id = scanner.nextLong();
+
+        Session session = sessionFactory.openSession();
+        Transaction transaction = null;
+
+        try {
+            transaction = session.beginTransaction();
+            // Busca o objeto no banco
+            Produto produto = session.get(Produto.class, id);
+
+            if (produto != null) {
+                // Remove o objeto
+                session.remove(produto);
+                transaction.commit();
+                System.out.println("✅ Produto removido com sucesso!");
+            } else {
+                System.out.println("❌ Produto não encontrado.");
+            }
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            // Erro comum: tentar apagar produto que já está em um pedido (chave estrangeira)
+            System.out.println("❌ Erro ao remover: Este produto pode estar vinculado a um pedido existente.");
         } finally {
             session.close();
         }
@@ -240,6 +275,42 @@ public class Main {
                 }
                 System.out.println("-------------------------------------------------");
             }
+        } finally {
+            session.close();
+        }
+    }
+
+    private static void removerPedido() {
+        System.out.println("\n-- Removendo Pedido (Cancelamento) --");
+        listarPedidos();
+        System.out.print("Digite o ID do pedido que deseja excluir: ");
+        Long id = scanner.nextLong();
+
+        Session session = sessionFactory.openSession();
+        Transaction transaction = null;
+
+        try {
+            transaction = session.beginTransaction();
+            Pedido pedido = session.get(Pedido.class, id);
+
+            if (pedido != null) {
+                // Devolver os itens ao estoque antes de excluir o pedido
+                for (Item item : pedido.getItens()) {
+                    Produto p = item.getProduto();
+                    p.setEstoque(p.getEstoque() + item.getQuantidade());
+                    session.merge(p); // Atualiza o estoque do produto no banco
+                }
+
+                // Remove o pedido (os Itens serão removidos automaticamente pelo CascadeType.ALL)
+                session.remove(pedido);
+                transaction.commit();
+                System.out.println("✅ Pedido removido e estoque devolvido!");
+            } else {
+                System.out.println("❌ Pedido não encontrado.");
+            }
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            System.out.println("❌ Erro ao remover pedido: " + e.getMessage());
         } finally {
             session.close();
         }
