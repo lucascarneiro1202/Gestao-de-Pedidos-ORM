@@ -74,8 +74,10 @@ Ao rodar a aplicação, um menu interativo será exibido no console:
 
 1. Cadastrar Produto Eletrônico: Registra um produto com atributos gerais + voltagem.
 2. Cadastrar Produto Perecível: Registra um produto com atributos gerais + data de validade.
-3. Listar Todos os Produtos: Exibe o catálogo completo, demonstrando o funcionamento do polimorfismo nas consultas do Hibernate.
-4. Criar Novo Pedido: Abre um fluxo de "carrinho de compras", onde é possível adicionar múltiplos itens. Ao finalizar, o estoque dos produtos é atualizado automaticamente.
-5. Listar Pedidos Realizados: Exibe o histórico de vendas, detalhando os itens, quantidades e o valor total de cada pedido.
-6. Remover Produto: Exclui um produto do sistema pelo ID, validando se o item não possui vínculos com pedidos existentes para garantir a integridade dos dados.
-7. Remover Pedido: Cancela uma venda realizada, removendo o registro do pedido e seus itens, além de restaurar automaticamente as quantidades vendidas ao estoque.
+3. Alterar Produto: Localiza um produto pelo ID e permite a atualização de seus dados, identificando automaticamente se o item é eletrônico ou perecível para exibir os campos específicos.
+4. Listar Todos os Produtos: Exibe o catálogo completo, demonstrando o funcionamento do polimorfismo nas consultas do Hibernate.
+5. Remover Produto: Exclui um produto do sistema pelo ID, validando se o item não possui vínculos com pedidos existentes para garantir a integridade dos dados.
+6. Criar Novo Pedido: Abre um fluxo de "carrinho de compras", onde é possível adicionar múltiplos itens. Ao finalizar, o estoque dos produtos é atualizado automaticamente.
+7. Listar Pedidos Realizados: Exibe o histórico de vendas, detalhando os itens, quantidades e o valor total de cada pedido.
+8. Remover Pedido: Cancela uma venda realizada, removendo o registro do pedido e seus itens, além de restaurar automaticamente as quantidades vendidas ao estoque.
+
