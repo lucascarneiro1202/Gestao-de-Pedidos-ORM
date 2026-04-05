@@ -31,12 +31,13 @@ public class Main {
             System.out.println("\n=== SISTEMA DE VENDAS E ESTOQUE ===");
             System.out.println("1. Cadastrar Produto Eletrônico");
             System.out.println("2. Cadastrar Produto Perecível");
-            System.out.println("3. Listar Todos os Produtos");
-            System.out.println("4. Criar Novo Pedido");
-            System.out.println("5. Listar Pedidos Realizados");
-            System.out.println("6. Remover Produto");
-            System.out.println("7. Remover Pedido");
-            System.out.println("8. Sair");
+            System.out.println("3. Alterar Produto");
+            System.out.println("4. Listar Todos os Produtos");
+            System.out.println("5. Remover Produto");
+            System.out.println("6. Criar Novo Pedido");
+            System.out.println("7. Listar Pedidos Realizados");
+            System.out.println("8. Remover Pedido");
+            System.out.println("9. Sair");
             System.out.print("Escolha uma opção: ");
 
             int opcao = scanner.nextInt();
@@ -45,12 +46,13 @@ public class Main {
             switch (opcao) {
                 case 1: cadastrarEletronico(); break;
                 case 2: cadastrarPerecivel(); break;
-                case 3: listarProdutos(); break;
-                case 4: criarPedido(); break;
-                case 5: listarPedidos(); break;
-                case 6: removerProduto(); break;
-                case 7: removerPedido(); break;
-                case 8:
+                case 3: alterarProduto(); break;
+                case 4: listarProdutos(); break;
+                case 5: removerProduto(); break;
+                case 6: criarPedido(); break;
+                case 7: listarPedidos(); break;
+                case 8: removerPedido(); break;
+                case 9:
                     System.out.println("Encerrando o sistema...");
                     rodando = false;
                     break;
@@ -135,6 +137,69 @@ public class Main {
                 System.out.printf("ID: %d | %s | Preço: R$%.2f | Estoque: %d\n", 
                                   p.getId(), p.getNome(), p.getPreco(), p.getEstoque());
             }
+        } finally {
+            session.close();
+        }
+    }
+
+    private static void alterarProduto() {
+        System.out.println("\n-- Alterando Produto --");
+        listarProdutos();
+        System.out.print("Digite o ID do produto que deseja alterar: ");
+        Long id = scanner.nextLong();
+        scanner.nextLine(); 
+
+        Session session = sessionFactory.openSession();
+        Transaction transaction = null;
+
+        try {
+            transaction = session.beginTransaction();
+            Produto produto = session.get(Produto.class, id);
+
+            if (produto == null) {
+                System.out.println("❌ Produto não encontrado!");
+                return;
+            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+            // Alterar Nome
+            System.out.print("Novo nome (atual: " + produto.getNome() + ") [Enter para manter]: ");
+            String novoNome = scanner.nextLine();
+            if (!novoNome.isEmpty()) produto.setNome(novoNome);
+            
+            // Alterar Preço
+            String precoAtualFormatado = String.valueOf(produto.getPreco()).replace(".", ",");
+            System.out.print("Novo preço (atual: " + precoAtualFormatado + ") [Enter para manter]: ");
+            String novoPrecoStr = scanner.nextLine().replace(",", ".");
+            if (!novoPrecoStr.isEmpty()) produto.setPreco(Double.parseDouble(novoPrecoStr));
+            
+            // Alterar Estoque
+            System.out.print("Novo estoque (atual: " + produto.getEstoque() + ") [Enter para manter]: ");
+            String novoEstoqueStr = scanner.nextLine();
+            if (!novoEstoqueStr.isEmpty()) produto.setEstoque(Integer.parseInt(novoEstoqueStr));
+
+            // Lógica específica para cada tipo
+            if (produto instanceof ProdutoEletronico pe) {
+                System.out.print("Nova voltagem (atual: " + pe.getVoltagem() + ") [Enter para manter]: ");
+                String novaVoltagem = scanner.nextLine();
+                if (!novaVoltagem.isEmpty()) pe.setVoltagem(novaVoltagem);
+                
+            } else if (produto instanceof ProdutoPerecivel pp) {
+                String dataFormatada = sdf.format(pp.getDataValidade());
+                System.out.print("Nova data (atual: " + dataFormatada + ") [Enter para manter]: ");
+                String novaDataStr = scanner.nextLine();
+                if (!novaDataStr.isEmpty()) pp.setDataValidade(sdf.parse(novaDataStr));
+            }
+
+            transaction.commit();
+            System.out.println("✅ Produto atualizado com sucesso!");
+
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            // Se o erro for de formato, damos uma mensagem melhor que 'null'
+            String msg = (e.getMessage() == null) ? "Formato de dado inválido!" : e.getMessage();
+            System.out.println("❌ Erro ao alterar: " + msg);
         } finally {
             session.close();
         }
